@@ -1,10 +1,11 @@
+---
 - name: "change mode"
   file:
        path: "{{ item.path }}"
        mode: "go=wxr"
        state: directory
   loop:
-  - { path: "{{ dir }}" }
+  - {path: "{{ dir }}"}
 - name: "configuring yum for kubeadm"
   yum_repository:
        name: "kubernetes"
@@ -13,9 +14,9 @@
        enabled: yes
        repo_gpgcheck: yes
        gpgcheck: yes
-       gpgkey: 
-       -  "{{ gpgkey }}"
-       -  "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+       gpgkey:
+       - "{{ gpgkey }}"
+       - "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
   become: true
 - name: "installing kubelet,  kubeadm & kubectl"
   yum:
@@ -23,34 +24,32 @@
         disable_excludes: "kubernetes"
         state: present 
   loop:
-  -   {  package_name: "{{ softwares }}"  }
+  - {package_name: "{{ softwares }}"}
 - name: "insatll docker and iproute"
   package: 
         name: "{{ item.name }}"
   loop:
-  -  { name: "docker" }
-  -  { name: "iproute-tc" }
+  - { name: "docker" }
+  - { name: "iproute-tc" }
 - name: "starting, enabling docker and kubelet"
   service:
         name: "{{ item.name }}"
         enabled: yes
         state: started
   loop:
-  -   {  name: "docker"  }
-  -   {  name: "kubelet" }
+  - {name: "docker"}
+  - {name: "kubelet"}
 - file:
        path: "{{ item.path }}"
        state: touch
   loop:
-  -  {  path: "{{ CreateFile[0] }}"  }
-  -  {  path: "{{ CreateFile[1] }}"  }
+  - {path: "{{ CreateFile[0] }}"}
+  - {path: "{{ CreateFile[1] }}"}
   become: true
 - name: "Creating daemon.json file inside /etc/docker"
   shell: |
       cat <<EOF | sudo tee  "{{ CreateFile[0] }}"
-      {
-      "exec-opts": ["native.cgroupdriver=systemd"]
-      }
+      {"exec-opts": ["native.cgroupdriver=systemd"]}
       EOF
   changed_when: false
 - name: "Re-starting Docker"
@@ -82,3 +81,4 @@
       remote_src: yes
 - name: "Setup Cluster"
   shell: "sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+---
